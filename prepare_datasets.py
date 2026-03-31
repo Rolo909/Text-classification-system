@@ -5,7 +5,7 @@ from sklearn.utils import shuffle
 import warnings
 warnings.filterwarnings('ignore')
 
-DATASETS_DIR = r"D:\ВКР\Реализация\Project-System-for-identifying-dangerous-content-in-texts-using-machine-learning-methods-main\datasets"
+DATASETS_DIR = r"D:\ВКР\Реализация\Text-classification-system\datasets"
 RANDOM_SEED = 42
 MAX_TEXT_LENGTH = 1000
 MIN_TEXT_LENGTH = 10
