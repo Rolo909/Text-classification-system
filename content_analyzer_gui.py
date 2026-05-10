@@ -31,11 +31,9 @@ class ModelWorker(QThread):
         
     def run(self):
         try:
-            # Предобработка текста
             self.progress.emit(25)
             processed_text = self.preprocess_text(self.text)
-            
-            # Токенизация
+
             self.progress.emit(50)
             inputs = self.tokenizer(
                 processed_text,
@@ -44,11 +42,9 @@ class ModelWorker(QThread):
                 padding="max_length",
                 truncation=True
             )
-            
-            # Перемещаем на устройство
+
             inputs = {key: val.to(self.device) for key, val in inputs.items()}
-            
-            # Инференс
+
             self.progress.emit(75)
             with torch.no_grad():
                 outputs = self.model(**inputs)
@@ -58,8 +54,7 @@ class ModelWorker(QThread):
                 confidence = probabilities[0][predicted_class].item()
             
             self.progress.emit(100)
-            
-            # Формируем результат
+
             result = {
                 'class_id': predicted_class,
                 'confidence': confidence,
@@ -76,19 +71,14 @@ class ModelWorker(QThread):
     
     def preprocess_text(self, text):
         """Предобработка текста"""
-        # Удаление URL
         text = re.sub(r'http\S+|www.\S+', '[URL]', text)
-        # Удаление лишних пробелов
         text = re.sub(r'\s+', ' ', text)
-        # Удаление переносов строк
         text = text.replace('\n', ' ').replace('\r', ' ')
         return text.strip()
 
 
 class ContentAnalyzerGUI(QMainWindow):
-    """Главное окно приложения"""
     
-    # Определение классов контента
     CLASSES = {
         0: {'name': 'Насилие', 'color': '#ff4444', 'description': 'Призывы к физическому насилию, угрозы'},
         1: {'name': 'Ненависть', 'color': '#ff9944', 'description': 'Оскорбления, дискриминация'},
@@ -109,48 +99,37 @@ class ContentAnalyzerGUI(QMainWindow):
         self.setup_styles()
         
     def init_ui(self):
-        """Инициализация пользовательского интерфейса"""
         self.setWindowTitle("Система выявления опасного контента - ruBERT Analyzer")
         self.setGeometry(100, 100, 1200, 800)
-        
-        # Центральный виджет
+
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
-        
-        # Создаем вкладки
+
         self.tabs = QTabWidget()
         main_layout.addWidget(self.tabs)
-        
-        # Вкладка анализа
+
         self.create_analysis_tab()
-        
-        # Вкладка истории
+
         self.create_history_tab()
-        
-        # Вкладка настроек
+
         self.create_settings_tab()
         
-        # Вкладка информации
         self.create_info_tab()
-        
-        # Статус бар
+
         self.statusBar = QStatusBar()
         self.setStatusBar(self.statusBar)
         self.statusBar.showMessage("Готов к работе")
         
     def create_analysis_tab(self):
-        """Создание вкладки анализа текста"""
         analysis_widget = QWidget()
         layout = QVBoxLayout(analysis_widget)
         
-        # Заголовок
         title = QLabel("🔍 Анализ текстового контента")
         title.setFont(QFont("Arial", 16, QFont.Bold))
         title.setAlignment(Qt.AlignCenter)
         layout.addWidget(title)
-        
-        # Группа загрузки модели
+
         model_group = QGroupBox("Загрузка модели")
         model_layout = QHBoxLayout()
         
@@ -167,11 +146,9 @@ class ContentAnalyzerGUI(QMainWindow):
         
         model_group.setLayout(model_layout)
         layout.addWidget(model_group)
-        
-        # Сплиттер для разделения ввода и результатов
+
         splitter = QSplitter(Qt.Horizontal)
-        
-        # Левая панель - ввод текста
+
         left_panel = QWidget()
         left_layout = QVBoxLayout(left_panel)
         
@@ -190,8 +167,7 @@ class ContentAnalyzerGUI(QMainWindow):
         )
         self.input_text.setMinimumHeight(200)
         left_layout.addWidget(self.input_text)
-        
-        # Кнопки действий
+
         action_layout = QHBoxLayout()
         
         self.analyze_btn = QPushButton("🚀 Анализировать")
@@ -225,23 +201,20 @@ class ContentAnalyzerGUI(QMainWindow):
         action_layout.addWidget(self.load_file_btn)
         
         left_layout.addLayout(action_layout)
-        
-        # Прогресс бар
+
         self.progress_bar = QProgressBar()
         self.progress_bar.setVisible(False)
         left_layout.addWidget(self.progress_bar)
         
         splitter.addWidget(left_panel)
-        
-        # Правая панель - результаты
+
         right_panel = QWidget()
         right_layout = QVBoxLayout(right_panel)
         
         result_label = QLabel("Результаты анализа:")
         result_label.setFont(QFont("Arial", 11, QFont.Bold))
         right_layout.addWidget(result_label)
-        
-        # Основной результат
+
         self.result_display = QGroupBox("Классификация")
         result_display_layout = QVBoxLayout()
         
@@ -259,8 +232,7 @@ class ContentAnalyzerGUI(QMainWindow):
         
         self.result_display.setLayout(result_display_layout)
         right_layout.addWidget(self.result_display)
-        
-        # Детальные вероятности
+
         prob_group = QGroupBox("Детальные вероятности по классам")
         prob_layout = QVBoxLayout()
         
@@ -273,8 +245,7 @@ class ContentAnalyzerGUI(QMainWindow):
         
         prob_group.setLayout(prob_layout)
         right_layout.addWidget(prob_group)
-        
-        # Кнопки действий с результатами
+
         result_action_layout = QHBoxLayout()
         
         self.save_result_btn = QPushButton("💾 Сохранить результат")
@@ -297,7 +268,6 @@ class ContentAnalyzerGUI(QMainWindow):
         self.tabs.addTab(analysis_widget, "🔍 Анализ")
     
     def create_history_tab(self):
-        """Создание вкладки истории анализов"""
         history_widget = QWidget()
         layout = QVBoxLayout(history_widget)
         
@@ -305,8 +275,7 @@ class ContentAnalyzerGUI(QMainWindow):
         title.setFont(QFont("Arial", 16, QFont.Bold))
         title.setAlignment(Qt.AlignCenter)
         layout.addWidget(title)
-        
-        # Таблица истории
+
         self.history_table = QTableWidget()
         self.history_table.setColumnCount(5)
         self.history_table.setHorizontalHeaderLabels([
@@ -319,8 +288,7 @@ class ContentAnalyzerGUI(QMainWindow):
         self.history_table.setColumnWidth(3, 100)
         self.history_table.setColumnWidth(4, 150)
         layout.addWidget(self.history_table)
-        
-        # Кнопки управления историей
+
         history_action_layout = QHBoxLayout()
         
         self.export_history_btn = QPushButton("📤 Экспорт истории")
@@ -341,7 +309,6 @@ class ContentAnalyzerGUI(QMainWindow):
         self.tabs.addTab(history_widget, "📊 История")
     
     def create_settings_tab(self):
-        """Создание вкладки настроек"""
         settings_widget = QWidget()
         layout = QVBoxLayout(settings_widget)
         
@@ -349,12 +316,10 @@ class ContentAnalyzerGUI(QMainWindow):
         title.setFont(QFont("Arial", 16, QFont.Bold))
         title.setAlignment(Qt.AlignCenter)
         layout.addWidget(title)
-        
-        # Настройки модели
+
         model_settings_group = QGroupBox("Параметры модели")
         model_settings_layout = QVBoxLayout()
         
-        # Max length
         max_length_layout = QHBoxLayout()
         max_length_layout.addWidget(QLabel("Максимальная длина токенов:"))
         self.max_length_spin = QSpinBox()
@@ -365,7 +330,6 @@ class ContentAnalyzerGUI(QMainWindow):
         max_length_layout.addStretch()
         model_settings_layout.addLayout(max_length_layout)
         
-        # Порог уверенности
         threshold_layout = QHBoxLayout()
         threshold_layout.addWidget(QLabel("Порог уверенности:"))
         self.threshold_spin = QDoubleSpinBox()
@@ -376,8 +340,7 @@ class ContentAnalyzerGUI(QMainWindow):
         threshold_layout.addWidget(self.threshold_spin)
         threshold_layout.addStretch()
         model_settings_layout.addLayout(threshold_layout)
-        
-        # Устройство
+
         device_layout = QHBoxLayout()
         device_layout.addWidget(QLabel("Устройство вычислений:"))
         self.device_combo = QComboBox()
@@ -392,7 +355,6 @@ class ContentAnalyzerGUI(QMainWindow):
         model_settings_group.setLayout(model_settings_layout)
         layout.addWidget(model_settings_group)
         
-        # Настройки отображения
         display_settings_group = QGroupBox("Настройки отображения")
         display_settings_layout = QVBoxLayout()
         
@@ -413,7 +375,6 @@ class ContentAnalyzerGUI(QMainWindow):
         
         layout.addStretch()
         
-        # Кнопка применения настроек
         apply_btn = QPushButton("✅ Применить настройки")
         apply_btn.clicked.connect(self.apply_settings)
         layout.addWidget(apply_btn)
@@ -421,7 +382,6 @@ class ContentAnalyzerGUI(QMainWindow):
         self.tabs.addTab(settings_widget, "⚙️ Настройки")
     
     def create_info_tab(self):
-        """Создание информационной вкладки"""
         info_widget = QWidget()
         layout = QVBoxLayout(info_widget)
         
@@ -491,7 +451,6 @@ class ContentAnalyzerGUI(QMainWindow):
         self.tabs.addTab(info_widget, "ℹ️ О системе")
     
     def setup_styles(self):
-        """Настройка стилей приложения"""
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #f5f5f5;
@@ -536,7 +495,6 @@ class ContentAnalyzerGUI(QMainWindow):
         """)
     
     def load_model(self):
-        """Загрузка модели ruBERT"""
         model_path = QFileDialog.getExistingDirectory(
             self, "Выберите директорию с моделью"
         )
@@ -547,22 +505,18 @@ class ContentAnalyzerGUI(QMainWindow):
         try:
             self.statusBar.showMessage("Загрузка модели...")
             QApplication.processEvents()
-            
-            # Определяем устройство
+
             if self.device_combo.currentText() == "CUDA (GPU)" and torch.cuda.is_available():
                 self.device = torch.device("cuda")
             else:
                 self.device = torch.device("cpu")
-            
-            # Загружаем токенайзер
+
             self.tokenizer = BertTokenizer.from_pretrained(model_path)
-            
-            # Загружаем модель
+
             self.model = BertForSequenceClassification.from_pretrained(model_path)
             self.model.to(self.device)
             self.model.eval()
-            
-            # Обновляем интерфейс
+
             self.model_path_label.setText(f"Модель загружена: {os.path.basename(model_path)}")
             self.model_path_label.setStyleSheet("color: #44ff44;")
             self.device_label.setText(f"Устройство: {self.device.type.upper()}")
@@ -583,7 +537,6 @@ class ContentAnalyzerGUI(QMainWindow):
             )
     
     def analyze_text(self):
-        """Анализ введенного текста"""
         text = self.input_text.toPlainText().strip()
         
         if not text:
@@ -593,14 +546,12 @@ class ContentAnalyzerGUI(QMainWindow):
         if not self.model or not self.tokenizer:
             QMessageBox.warning(self, "Предупреждение", "Сначала загрузите модель")
             return
-        
-        # Отключаем кнопку и показываем прогресс
+
         self.analyze_btn.setEnabled(False)
         self.progress_bar.setVisible(True)
         self.progress_bar.setValue(0)
         self.statusBar.showMessage("Анализ текста...")
-        
-        # Создаем и запускаем worker
+
         max_length = self.max_length_spin.value()
         self.current_worker = ModelWorker(text, self.model, self.tokenizer, self.device, max_length)
         self.current_worker.finished.connect(self.on_analysis_finished)
@@ -609,29 +560,22 @@ class ContentAnalyzerGUI(QMainWindow):
         self.current_worker.start()
     
     def on_analysis_finished(self, result):
-        """Обработка завершения анализа"""
-        # Включаем кнопку и скрываем прогресс
         self.analyze_btn.setEnabled(True)
         self.progress_bar.setVisible(False)
         self.statusBar.showMessage("Анализ завершен", 3000)
-        
-        # Отображаем результаты
+
         self.display_results(result)
-        
-        # Сохраняем в историю
+
         if self.save_to_history_check.isChecked():
             self.history.append(result)
             self.update_history_table()
-        
-        # Активируем кнопки сохранения
+
         self.save_result_btn.setEnabled(True)
         self.copy_result_btn.setEnabled(True)
-        
-        # Сохраняем текущий результат
+
         self.current_result = result
     
     def on_analysis_error(self, error_msg):
-        """Обработка ошибки анализа"""
         self.analyze_btn.setEnabled(True)
         self.progress_bar.setVisible(False)
         self.statusBar.showMessage("Ошибка анализа", 3000)
@@ -642,14 +586,12 @@ class ContentAnalyzerGUI(QMainWindow):
         )
     
     def display_results(self, result):
-        """Отображение результатов анализа"""
         class_id = result['class_id']
         confidence = result['confidence']
         probabilities = result['probabilities']
         
         class_info = self.CLASSES[class_id]
-        
-        # Основной результат
+
         self.class_label.setText(f"Класс: {class_info['name']}")
         self.class_label.setStyleSheet(f"color: {class_info['color']};")
         
@@ -663,14 +605,12 @@ class ContentAnalyzerGUI(QMainWindow):
         else:
             self.description_label.setText(class_info['description'])
             self.description_label.setStyleSheet("color: #333333;")
-        
-        # Детальные вероятности
+
         if self.show_probabilities_check.isChecked():
             for idx, prob in enumerate(probabilities):
                 class_name = self.CLASSES[idx]['name']
                 self.probability_labels[idx].setText(f"{class_name}: {prob*100:.2f}%")
-                
-                # Подсветка максимальной вероятности
+
                 if idx == class_id:
                     color = self.CLASSES[idx]['color']
                     self.probability_labels[idx].setStyleSheet(
@@ -684,11 +624,9 @@ class ContentAnalyzerGUI(QMainWindow):
                     )
     
     def clear_input(self):
-        """Очистка поля ввода"""
         self.input_text.clear()
     
     def load_text_file(self):
-        """Загрузка текста из файла"""
         file_path, _ = QFileDialog.getOpenFileName(
             self, "Выберите текстовый файл",
             "", "Text Files (*.txt);;All Files (*)"
@@ -707,7 +645,6 @@ class ContentAnalyzerGUI(QMainWindow):
                 )
     
     def save_current_result(self):
-        """Сохранение текущего результата"""
         if not hasattr(self, 'current_result'):
             return
         
@@ -729,7 +666,6 @@ class ContentAnalyzerGUI(QMainWindow):
                 )
     
     def copy_result(self):
-        """Копирование результата в буфер обмена"""
         if not hasattr(self, 'current_result'):
             return
         
@@ -755,37 +691,30 @@ class ContentAnalyzerGUI(QMainWindow):
         self.statusBar.showMessage("Результат скопирован в буфер обмена", 3000)
     
     def update_history_table(self):
-        """Обновление таблицы истории"""
         self.history_table.setRowCount(len(self.history))
         
         for row, result in enumerate(reversed(self.history)):
-            # Время
             time_item = QTableWidgetItem(result['timestamp'])
             self.history_table.setItem(row, 0, time_item)
-            
-            # Текст (фрагмент)
+
             text_fragment = result['text'][:50] + "..." if len(result['text']) > 50 else result['text']
             text_item = QTableWidgetItem(text_fragment)
             self.history_table.setItem(row, 1, text_item)
-            
-            # Класс
+
             class_info = self.CLASSES[result['class_id']]
             class_item = QTableWidgetItem(class_info['name'])
             class_item.setForeground(QColor(class_info['color']))
             self.history_table.setItem(row, 2, class_item)
-            
-            # Уверенность
+
             confidence_item = QTableWidgetItem(f"{result['confidence']*100:.2f}%")
             self.history_table.setItem(row, 3, confidence_item)
-            
-            # Действия
+
             actions_item = QTableWidgetItem("📋 Детали")
             self.history_table.setItem(row, 4, actions_item)
         
         self.history_count_label.setText(f"Записей: {len(self.history)}")
     
     def export_history(self):
-        """Экспорт истории в файл"""
         if not self.history:
             QMessageBox.information(self, "Информация", "История пуста")
             return
@@ -825,7 +754,6 @@ class ContentAnalyzerGUI(QMainWindow):
                 )
     
     def clear_history(self):
-        """Очистка истории"""
         if not self.history:
             return
         
@@ -842,13 +770,11 @@ class ContentAnalyzerGUI(QMainWindow):
             self.statusBar.showMessage("История очищена", 3000)
     
     def apply_settings(self):
-        """Применение настроек"""
         self.statusBar.showMessage("Настройки применены", 3000)
         QMessageBox.information(self, "Успех", "Настройки успешно применены")
 
 
 def main():
-    """Точка входа в приложение"""
     app = QApplication(sys.argv)
     app.setApplicationName("ruBERT Content Analyzer")
     
