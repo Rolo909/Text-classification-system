@@ -18,8 +18,9 @@
 [Google Drive](https://drive.google.com/drive/folders/1ErRJQ44-nKLFUSea4sO1EIPVmO9iMEa7?usp=drive_link)
 
 Архив содержит:
-- папку `Content_analyzer` — скомпилированная программа
-- папку `rubert_toxic_classifier_v3` — обученная модель
+- файл `\dist\ContentAnalyzer\ContentAnalyzer.exe"` — скомпилированная программа
+- файл `\content_analyzer_gui.py` - исходный код программы
+- папку `\Trained_models\rubert_dangerous_content_v5_31.03.2026"` — обученная модель
 
 ### 2. Распаковать архив
 
@@ -39,7 +40,7 @@ Content_analyzer\dist\ContentAnalyzer\ContentAnalyzer.exe
 
 ## Работа с программой
 
-1. При первом запуске нажмите **«Загрузить модель»** и укажите путь к папке `rubert_toxic_classifier_v3`.
+1. При первом запуске нажмите **«Загрузить модель»** и укажите путь к папке `rubert_dangerous_content_v5_31.03.2026`.
 2. После загрузки модели кнопка **«Анализировать»** станет активной.
 3. Введите текст вручную или загрузите `.txt`-файл через **«Загрузить из файла»**.
 4. Нажмите **«Анализировать»** — результат появится справа.
